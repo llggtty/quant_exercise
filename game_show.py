@@ -28,10 +28,11 @@ otherwise you continue the game.
 """
 
 import numpy as np
-y = np.random.binomial(40,0.7,10000)
+n_sim = 5000
+y = np.random.binomial(40,0.7,n_sim)
 # bin distribution
 def bino_p(x,y):
-    return sum(y>x)/10000
+    return sum(y>x)/n_sim
 
 def bino_e(x,y):
     if len(y[y>x])>0:
@@ -42,18 +43,19 @@ def bino_e(x,y):
 #E(x) = 28
 # at the last run, it's optimal to take anything, so A[-1] =0
 # the previous run, if offer is x, which is smaller than Ex, I will turn down. so A[-2] = Ex
-# the n-2 run, A[-3] = Ex +p(x>Ex)*E(x|x>Ex)
+# the n-2 run, A[-3] = p(x<=A[-2])*A[-2] +p(x>A[-2])*E(x|x>A[-2])
 
 def optimal(rounds):
     ex = 40*0.7
     y = np.random.binomial(40,0.7,10000)
-    amounts = np.repeat(0, rounds)
+    amounts = np.repeat(0.0, rounds-1)
     amounts[-1] = 0
     amounts[-2] = ex
     for i in range(3, rounds):
         previous_accept = amounts[-i+1]
-        current_accept = bino_p(previous_accept,y)* bino_e(previous_accept,y)
-        amounts[-i] = current_accept
+        p=bino_p(previous_accept,y)
+        current_accept = p* bino_e(previous_accept,y) + (1 - p)*previous_accept
+        amounts[-i] = current_accept        
     return amounts
 
-print(optimal(100))
+print(optimal(10))
